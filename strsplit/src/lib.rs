@@ -13,7 +13,7 @@ impl<'r, 'd> StrSplit<'r, 'd> {
     }
 }
 
-impl<'r, 'd> Iterator for StrSplit<'r, 'd> {
+impl<'r> Iterator for StrSplit<'r, '_> {
     type Item = &'r str;
     fn next(&mut self) -> Option<Self::Item> {
         let remainder = self.remainder.as_mut()?;
@@ -27,7 +27,7 @@ impl<'r, 'd> Iterator for StrSplit<'r, 'd> {
     }
 }
 
-pub fn until_char<'r>(s: &'r str, c: char) -> &'r str {
+pub fn until_char(s: &str, c: char) -> &str {
     StrSplit::new(s, &format!("{}", c))
         .next()
         .expect("StrSplit always gives al least one result.")

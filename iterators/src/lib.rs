@@ -14,6 +14,7 @@ where
     outer: O,
     // added on the step 3 of improvements
     inner: Option<<O::Item as IntoIterator>::IntoIter>,
+    inner_back: Option<<O::Item as IntoIterator>::IntoIter>,
 }
 
 impl<O: Iterator> Flatten<O>
@@ -25,6 +26,7 @@ where
         Flatten {
             outer: o,
             inner: None,
+            inner_back: None,
         }
     }
 }
@@ -46,6 +48,8 @@ where
 
         //3:
         loop {
+            // if let Some(inner_iter) = self.inner.as_mut() {
+            // if let Some(inner_iter) = &mut self.inner {
             if let Some(ref mut inner_iter) = self.inner {
                 if let Some(item) = inner_iter.next() {
                     return Some(item);
@@ -55,6 +59,26 @@ where
             let next_inner_iter = self.outer.next()?.into_iter();
             self.inner = Some(next_inner_iter);
             //self.inner.as_mut().unwrap().next()
+        }
+    }
+}
+
+impl<O> DoubleEndedIterator for Flatten<O>
+where
+    O: DoubleEndedIterator,
+    O::Item: IntoIterator,
+    <O::Item as IntoIterator>::IntoIter: DoubleEndedIterator,
+{
+    fn next_back(&mut self) -> Option<Self::Item> {
+        loop {
+            if let Some(ref mut inner_iter) = self.inner_back {
+                if let Some(item) = inner_iter.next_back() {
+                    return Some(item);
+                }
+                self.inner_back = None;
+            }
+            let next_inner_iter = self.outer.next_back()?.into_iter();
+            self.inner_back = Some(next_inner_iter);
         }
     }
 }
@@ -70,10 +94,7 @@ mod tests {
 
     #[test]
     fn empty_wide() {
-        assert_eq!(
-            flatten(vec![Vec::<()>::new(), vec![], vec![]]).count(),
-            0
-        )
+        assert_eq!(flatten(vec![Vec::<()>::new(), vec![], vec![]]).count(), 0)
     }
 
     #[test]
@@ -88,10 +109,7 @@ mod tests {
 
     #[test]
     fn two_4() {
-        assert_eq!(
-            flatten(vec![vec!["a", "b"], vec!["c", "d"]]).count(),
-            4
-        )
+        assert_eq!(flatten(vec![vec!["a", "b"], vec!["c", "d"]]).count(), 4)
     }
 
     #[test]
@@ -102,16 +120,55 @@ mod tests {
     #[test]
     fn eight() {
         assert_eq!(
-            flatten(
-                vec![
-                    vec!["a", "b"],
-                    vec!["c", "d"],
-                    vec!["e", "f"],
-                    vec!["g", "h"]
-                ]
-            )
+            flatten(vec![
+                vec!["a", "b"],
+                vec!["c", "d"],
+                vec!["e", "f"],
+                vec!["g", "h"]
+            ])
             .count(),
             8
         )
+    }
+
+    #[test]
+    fn reverse() {
+        assert_eq!(
+            flatten(std::iter::once(vec!["a", "b"]))
+                .rev()
+                .collect::<Vec<_>>(),
+            vec!["b", "a"]
+        )
+    }
+
+    #[test]
+    fn reverse_wide() {
+        assert_eq!(
+            flatten(vec!(vec!["a"], vec!["b"]))
+                .rev()
+                .collect::<Vec<_>>(),
+            vec!["b", "a"]
+        )
+    }
+
+    #[test]
+    fn both_ends() {
+        let mut iter = flatten(vec![vec!["a1", "a2", "a3"], vec!["b1", "b2", "b3"]]);
+        assert_eq!(iter.next(), Some("a1"));
+        assert_eq!(iter.next_back(), Some("b3"));
+        assert_eq!(iter.next(), Some("a2"));
+        assert_eq!(iter.next_back(), Some("b2"));
+        assert_eq!(iter.next(), Some("a3"));
+        assert_eq!(iter.next_back(), Some("b1"));
+        assert_eq!(iter.next(), None);
+        assert_eq!(iter.next_back(), None);
+    }
+
+    #[test]
+    fn deep() {
+        assert_eq!(
+            flatten(flatten(vec![vec![vec![1, 2, 3]]])).collect::<Vec<_>>(),
+            vec![1, 2, 3]
+        );
     }
 }

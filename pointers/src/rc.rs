@@ -11,6 +11,22 @@ struct RcInner<T> {
 
 pub struct Rc<T> {
     ptr: NonNull<RcInner<T>>,
+    /// The PhantomData<RcInner<T>> field is crucial because, even though the Rc struct doesn't
+    /// directly own a value of type T or RcInner<T>
+    /// (it only holds a raw pointer NonNull<RcInner<T>>), it manages the lifetime and eventual
+    /// deallocation of the RcInner<T>, which does contain a T. PhantomData tells the Rust compiler
+    /// to reason about Rc<T> as if it does somehow own or interact with RcInner<T> (and thus T)
+    /// for the purposes of:
+    /// - Drop Checking: Ensuring that if T has a Drop implementation, that implementation is
+    ///   considered when determining if dropping an Rc<T> is safe in the presence of other references
+    ///   or lifetimes.
+    /// - Auto-Trait Implementations (like Send and Sync): The presence of PhantomData<RcInner<T>>
+    ///   makes the compiler consider the Send and Sync properties of RcInner<T> (and transitively, T)
+    ///   when deciding if Rc<T> should automatically derive these traits.
+    ///
+    /// Without PhantomData, the compiler might incorrectly assume that Rc<T> has no meaningful
+    /// relationship with T, potentially leading to unsoundness, particularly in scenarios
+    /// involving dropping or multi-threading.
     phantom: PhantomData<RcInner<T>>,
 }
 

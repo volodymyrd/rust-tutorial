@@ -1,20 +1,26 @@
 pub struct List<T> {
+    len: usize,
     _marker: std::marker::PhantomData<T>,
 }
 
 impl<T> List<T> {
     pub fn new() -> Self {
         Self {
+            len: 0,
             _marker: std::marker::PhantomData,
         }
     }
 
     pub fn len(&self) -> usize {
-        0
+        self.len
     }
 
     pub fn is_empty(&self) -> bool {
-        true
+        self.len == 0
+    }
+
+    pub fn push(&mut self, _element: T) {
+        self.len += 1;
     }
 }
 
@@ -34,5 +40,14 @@ mod tests {
 
         assert_eq!(list.len(), 0);
         assert!(list.is_empty())
+    }
+
+    #[test]
+    fn test_push_increases_len() {
+        let mut list: List<i32> = List::new();
+
+        list.push(1);
+
+        assert_eq!(list.len(), 1);
     }
 }

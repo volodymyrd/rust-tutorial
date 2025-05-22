@@ -21,7 +21,8 @@ new and experienced users.
 | `d`                 | New directory               | 
 | `t`                 | Open file in new tab        | 
 | `gt`                | Switch tabs                 | 
-| `e .`               | Sinc with current directory       | 
+| `e .`               | Sinc with current directory | 
+
 ---
 
 ## 🧭 Navigation
@@ -40,17 +41,28 @@ new and experienced users.
 
 ## ✍️ Editing
 
-| Command            | Description                         |
-|--------------------|-------------------------------------|
-| `i`, `a`, `o`      | Insert modes (insert, append, open) |
-| `x`                | Delete character under cursor       |
-| `dd`               | Delete (cut) a line                 |
-| `yy`               | Yank (copy) a line                  |
-| `p`, `P`           | Paste after/before cursor           |
-| `u`                | Undo                                |
-| `Ctrl-r`           | Redo                                |
-| `cw`, `c$`, `ciw`  | Change word/to end/inner word       |
-| `v`, `V`, `Ctrl-v` | Visual, Visual Line, Visual Block   |
+| Command                             | Description                                                         |
+|-------------------------------------|---------------------------------------------------------------------|
+| `i`, `a`, `o`                       | Insert modes (insert before, append after, open new line)           |
+| `x`                                 | Delete character under cursor                                       |
+| `dd`                                | Delete (cut) a line                                                 |
+| `yy`                                | Yank (copy) a line                                                  |
+| `p`, `P`                            | Paste after / before cursor                                         |
+| `u`                                 | Undo                                                                |
+| `Ctrl-r`                            | Redo                                                                |
+| `cw`, `c$`, `ciw`                   | Change word / to end of line / inside word                          |
+| `v`, `V`, `Ctrl-v`                  | Visual Mode (character / line / block selection)                    |
+| `d` (in visual mode)                | Delete selected text or lines                                       |
+| `y` (in visual mode)                | Yank selected text                                                  |
+| `$` (in visual block)               | Extend block selection to end of each line                          |
+| `Shift-i` (in block)                | Insert before selected block columns                                |
+| `r<char>`                           | Replace character under cursor                                      |
+| `c` (in visual mode)                | Change selected text                                                |
+| `:` after visual block              | Use ex command on selected block/lines (e.g., `:d` to delete lines) |
+| `V` + `d`                           | Delete full lines                                                   |
+| `Ctrl-v` + `$` + `d`                | Delete from block column to end of line on each selected line       |
+| `:10,20d`                           | Delete lines 10 through 20                                          |
+| `Ctrl-v` + `Shift-i` + text + `Esc` | Insert text at beginning of all selected lines                      |
 
 ---
 
@@ -127,6 +139,7 @@ new and experienced users.
 ```vim
 :terminal
 ```
+
 * Opens a full terminal buffer inside Neovim.
 * Use i to enter terminal mode.
 * Use Ctrl-\ Ctrl-n to return to normal mode.

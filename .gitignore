@@ -1,4 +1,5 @@
 .idea
-target
+.gradle
 *.swp
-
+target
+build

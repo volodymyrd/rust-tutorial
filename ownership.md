@@ -99,3 +99,9 @@ lifetime parameters: fn foo<'a>(x: &'a i32) -> &'a i32.
 The third rule is that, if there are multiple input lifetime parameters, but one of them is &self or &mut self because
 this is a method, the lifetime of self is assigned to all output lifetime parameters. This third rule makes methods much
 nicer to read and write because fewer symbols are necessary.
+
+## Unbounded Lifetimes
+
+Unsafe code can often end up producing references or lifetimes out of thin air.
+Such lifetimes come into the world as unbounded.
+The safest and easiest way to bound a lifetime is to return it from a function with a bound lifetime.

@@ -105,3 +105,62 @@ nicer to read and write because fewer symbols are necessary.
 Unsafe code can often end up producing references or lifetimes out of thin air.
 Such lifetimes come into the world as unbounded.
 The safest and easiest way to bound a lifetime is to return it from a function with a bound lifetime.
+
+## Higher-Rank Trait Bounds (HRTBs)
+
+HRTBs (Higher-Ranked Trait Bounds) allow you to say “for all lifetimes” in a trait bound.
+They make it possible to express that a trait implementation must work regardless of the lifetime used.
+
+```rust
+impl<F> Closure<F>
+where
+        for<'a> F: Fn(&'a (u8, u16)) -> &'a u8,
+{
+    fn call(&self) -> &u8 {
+        (self.func)(&self.data)
+    }
+}
+```
+
+`for<'a> `can be read as "for all choices of 'a", and basically produces an infinite list of trait bounds
+that F must satisfy.
+
+## Subtyping and Variance
+
+Subtyping in Rust refers to situations where one type can be used in place of another, typically involving lifetimes.
+It's mostly relevant in unsafe code and lifetime variance.
+
+* Subtyping mainly applies to lifetimes, not general types.
+* 'a is a subtype of 'b if 'a lives at least as long as 'b.
+* Types like &'a T are covariant over 'a, meaning &'static T can be used where &'short T is expected.
+* Variance (covariant, contravariant, invariant) determines how lifetimes behave in complex types.
+* Unsafe code must be careful with subtyping and variance to avoid memory safety issues.
+
+## Drop Check
+
+Drop Check (Dropck), Rust’s mechanism for ensuring that destructors (i.e., Drop implementations) run safely.
+
+* Dropck ensures safety during destruction by checking that all types a value owns or touches are valid when its Drop
+  code runs.
+* It prevents use-after-free bugs by enforcing that generic types with Drop cannot assume they own references unless
+  explicitly bounded (e.g., with T: 'a).
+* If a type has a destructor (impl Drop), then Rust will conservatively check the lifetimes of its fields at the point
+  of drop.
+* You can influence this behavior using #[may_dangle], a special attribute that allows a type parameter to be dangling
+  when the destructor runs — used only with unsafe code and advanced patterns.
+
+## PhantomData
+
+PhantomData is a zero-sized type used to indicate that a type logically owns or acts as if it uses a generic type, even
+if that type isn't actually used in memory.
+
+The Rust compiler uses type information to enforce ownership, variance, and drop check rules. If a generic parameter
+isn’t used in a way that the compiler can detect, you must use PhantomData to tell the compiler how your type should
+behave.
+
+**Main purposes:**
+
+- Ownership / drop checking: Letting the compiler know that your type conceptually owns a value of type T.
+- Variance control: Influencing whether a generic parameter is covariant, contravariant, or invariant.
+- Unsafe code correctness: Ensuring the compiler enforces memory safety assumptions when your type interacts with
+  lifetimes or raw pointers.

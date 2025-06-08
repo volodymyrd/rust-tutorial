@@ -1,13 +1,13 @@
 pub struct List<T> {
+    ptr: *mut T,
     len: usize,
-    _marker: std::marker::PhantomData<T>,
 }
 
 impl<T> List<T> {
     pub fn new() -> Self {
         Self {
+            ptr: 0 as *mut T,
             len: 0,
-            _marker: std::marker::PhantomData,
         }
     }
 

@@ -1,2 +1,5 @@
+mod desert;
 mod error;
-mod deser;
+
+pub use desert::from_str;
+pub use error::{Error, Result};

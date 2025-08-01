@@ -26,6 +26,24 @@ impl<'de> Deserializer<'de> {
         self.input = &self.input[ch.len_utf8()..];
         Ok(ch)
     }
+
+    // Parse a string until the next '"' character.
+    //
+    // Makes no attempt to handle escape sequences. What did you expect? This is
+    // example code!
+    fn parse_string(&mut self) -> Result<&'de str> {
+        if self.next_char()? != '"' {
+            return Err(Error::ExpectedString);
+        }
+        match self.input.find('"') {
+            Some(len) => {
+                let s = &self.input[..len];
+                self.input = &self.input[len + 1..];
+                Ok(s)
+            }
+            None => Err(Error::Eof),
+        }
+    }
 }
 
 // This basic deserializer supports only `from_str`.
@@ -133,18 +151,20 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         todo!()
     }
 
+    // Refer to the "Understanding deserializer lifetimes" page for information
+    // about the three deserialization flavors of strings in Serde.
     fn deserialize_str<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        visitor.visit_borrowed_str(self.parse_string()?)
     }
 
     fn deserialize_string<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        self.deserialize_str(visitor)
     }
 
     fn deserialize_bytes<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
@@ -279,11 +299,15 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         todo!()
     }
 
+    // An identifier in Serde is the type that identifies a field of a struct or
+    // the variant of an enum. In JSON, struct fields and enum variants are
+    // represented as strings. In other formats they may be represented as
+    // numeric indices.
     fn deserialize_identifier<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        self.deserialize_str(visitor)
     }
 
     fn deserialize_ignored_any<V>(self, visitor: V) -> std::result::Result<V::Value, Self::Error>
@@ -347,10 +371,7 @@ impl<'de, 'a> MapAccess<'de> for CommaSeparated<'a, 'de> {
 fn test_empty_object() {
     use std::collections::HashMap;
 
-    assert_eq!(
-        from_str::<HashMap<i32, i32>>("{}").unwrap(),
-        HashMap::new()
-    );
+    assert_eq!(from_str::<HashMap<i32, i32>>("{}").unwrap(), HashMap::new());
 }
 
 #[test]
